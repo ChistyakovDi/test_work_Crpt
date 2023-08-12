@@ -34,6 +34,7 @@ public class CrptApi {
         this.requests = new LinkedList<>();
     }
 
+    // метод ввода товара в оборот
     public synchronized void createDocument(Document document, String signature) throws IOException, InterruptedException {
         apiRequest();
         GsonBuilder gsonBuilder = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
@@ -59,6 +60,7 @@ public class CrptApi {
         value = processExecutor(putGoods);
     }
 
+    // метод ограничения запросов
     private synchronized void apiRequest() throws InterruptedException {
         final long current = System.currentTimeMillis();
         requests.add(current);
@@ -78,6 +80,7 @@ public class CrptApi {
         }
     }
 
+    // метод запроса авторизации(оставлен публичным, потому что за время действия токена, его можно использовать несколько раз)
     public synchronized void getAuth() throws IOException {
         String getAuth = "curl -v https://ismp.crpt.ru/api/v3/auth/cert/key";
         uuid = processExecutor(getAuth);
@@ -85,18 +88,20 @@ public class CrptApi {
         uuid = uuid.substring(uuid.indexOf("\"") + 3, uuid.indexOf(",") - 1);
     }
 
-    public synchronized void getToken(String sub) throws IOException {
-        sub = toBase64(sub);
+    // метод получения аутентификационного токена (оставлен публичным, потому что за время действия токена, его можно использовать несколько раз)
+    public synchronized void getToken(String s) throws IOException {
+        s = toBase64(s);
         String getTokenCommand = "curl -X POST -v 'https://ismp.crpt.ru/api/v3/auth/cert/'\\" +
                 "-H 'content-type: application/json;charset=UTF-8'\\" +
                 "--data-binary '{\\" +
                 "\"uuid\":\"" + uuid + "\",\\" +
-                "\"data\":\"" + sub + "\"'";
+                "\"data\":\"" + s + "\"'";
         token = processExecutor(getTokenCommand);
         token = token.substring(token.indexOf("token"));
         token = token.substring(token.indexOf("\"") + 3, token.indexOf("}") - 1);
     }
 
+    // метод кодировки в base64
     private synchronized String toBase64(String text) {
         Base64.Encoder enc = Base64.getEncoder();
         byte[] encbytes = enc.encode(text.getBytes());
@@ -123,8 +128,7 @@ public class CrptApi {
     }
 
     @JsonAutoDetect
-    static
-    class Document {
+    static class Document {
         @Expose
         private List<Description> descriptions;
         private String doc_id;
